@@ -1,4 +1,6 @@
 downloads/*
 *.pyc
 *.csv
-
+.DS_Store
+.idea/
+*.zip

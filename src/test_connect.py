@@ -4,6 +4,7 @@ import json
 DOC_TYPE = "rides"
 
 CABI_INDEX = "cabi_data_1413577666"
+# CABI_INDEX = "cabi_data_1413749232"
 
 
 def test():
@@ -39,10 +40,12 @@ def return_distinct_stations():
     query = {
         "aggs": {
             "start_nums": {
-                "terms": {"field": "start_stn_num"}
+                "terms": {"field": "start_stn_num",
+                          "size": 0}
             },
             "end_nums": {
-                "terms": {"field": "fin_stn_num"}
+                "terms": {"field": "fin_stn_num",
+                          "size": 0}
             }
         },
         "_source": "False"
@@ -62,14 +65,29 @@ def return_distinct_stations():
     for k in final_set:
         ret_dict['nodes'].append(dict({"name": k}))
 
-    return json.dumps(ret_dict)
+    return json.dumps(ret_dict, sort_keys=True)
 
 
-def return_trip_volume_numtrips():
+def return_trip_volume_numtrips(ref_array):
     """
     test some form of aggregation
+    :ref_array: a json list that would be used for nodes
     :return:
     """
+
+    lookup_list = dict()
+    try:
+        ref_list = json.loads(ref_array)['nodes']
+        ref_list = [_['name'] for _ in ref_list]
+        ref_list.sort()
+        count = 0
+        for k in ref_list:
+            lookup_list[k] = count
+            count += 1
+    except:
+        print "There was a big problem getting the list in."
+        raise
+
     es = Elasticsearch([{"host": "localhost"}])
 
     query = {
@@ -90,9 +108,9 @@ def return_trip_volume_numtrips():
     for link in link_results['aggregations']['ut']['buckets']:
         res = dict()
         # print link
-        key = [int(_) for _ in link['key'].split("_")]
-        res['start'] = key[0]
-        res['finish'] = key[1]
+        key = link['key'].split("_")
+        res['source'] = lookup_list[key[0]]
+        res['target'] = lookup_list[key[1]]
         res['value'] = link['doc_count']
         if res['value'] > 0:
             tot_results.append(res)
@@ -104,6 +122,12 @@ def return_trip_volume_numtrips():
 
 if __name__ == '__main__':
     # test()
-    print return_distinct_stations()
-    print return_trip_volume_numtrips()
+    ref_stn_list = return_distinct_stations()
+
+    trips_list = return_trip_volume_numtrips(ref_stn_list)
+    fin_pre_json = dict()
+
+    fin_pre_json['links'] = json.loads(trips_list)['links']
+    fin_pre_json['nodes'] = json.loads(ref_stn_list)['nodes']
+    print json.dumps(fin_pre_json)
     #print return_trip_volume_numtrips()

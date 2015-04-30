@@ -19,7 +19,7 @@ from datetime import datetime
 import re
 
 # DATA_DIR = "/home/jim/Code/cabi_data/downloads/"
-DATA_DIR = "/Users/jimmy1/PersCode/cabi_data/testdata"
+DATA_DIR = "/Users/jimmy1/PersCode/cabi_data/testdata2"
 
 
 def just_numbers(str_input):
@@ -122,7 +122,7 @@ class CabiAnalyzer:
             seconds = timestr_to_sec(in_data[0])
             fromtime = datetime.strptime(in_data[1], '%m/%d/%Y %H:%M')
             fintime = datetime.strptime(in_data[2], '%m/%d/%Y %H:%M')
-            print in_data
+            # print in_data
             start_stn_num = re.findall("([0-9]{5})", in_data[3])[0]
             start_stn_addr = in_data[3].split("(")[0].strip()
 

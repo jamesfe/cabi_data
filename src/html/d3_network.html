@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+  fill: #000;
+  font-family: Verdana;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+</style>
+<body>
+<script src="../js/deps/d3.min.js"></script>
+<script>
+
+function redraw() {
+  console.log("redrawing.");
+  svg
+    .attr("transform",
+      "translate(" + d3.event.translate + ")"
+      + " scale(" + d3.event.scale + ")");
+}
+
+var width = 960,
+    height = 500;
+
+var color = d3.scale.category20();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+      .call(d3.behavior.zoom().on("zoom", redraw))
+    .append("g");
+
+var force = d3.layout.force()
+    .size([width, height]);
+
+d3.json("./small_data.json", function(error, graph) {
+  force
+      .linkDistance(200)
+      .nodes(graph.nodes)
+      .links(graph.links)
+      .start();
+
+var n = 10000;
+for (var i = 0; i < n; ++i) {
+  force.tick();
+}
+force.start();
+//force.stop();
+// from https://gist.github.com/DavidBruant/6489486
+var moveItems = (function() {
+    var todoNode = 0;
+    var todoLink = 0;
+    var MAX_NODES = 240;
+    var MAX_LINKS = MAX_NODES/2;
+      
+    var restart = false;
+       
+    function moveSomeNodes() {
+        var n;
+        var goal = Math.min(todoNode+MAX_NODES, node[0].length);
+          
+        for(var i=todoNode ; i < goal ; i++){
+            n = node[0][i];
+            n.setAttribute('cx', n.__data__.x);
+            n.setAttribute('cy', n.__data__.y);
+            //n.setAttribute("transform", function(d) { return "translate(" + n.__data__.x + "," + n.__data__.y + ")"; });
+        }
+        
+        todoNode = goal;
+        requestAnimationFrame(moveSome)
+    }
+      
+    function moveSomeLinks(){
+        var l;
+        var goal = Math.min(todoLink+MAX_LINKS, link[0].length);
+           
+        for(var i=todoLink ; i < goal ; i++){
+            l = link[0][i];
+            //console.log(l);
+            l.setAttribute('x1', l.__data__.source.x);
+            l.setAttribute('y1', l.__data__.source.y);
+            l.setAttribute('x2', l.__data__.target.x);
+            l.setAttribute('y2', l.__data__.target.y);
+        }
+
+          
+        todoLink = goal;
+        requestAnimationFrame(moveSome)
+    }
+        
+    function moveSome(){
+        //console.time('moveSome')
+        if(todoNode < node[0].length) // some more nodes to do
+            moveSomeNodes()
+        else{ // nodes are done
+            if(todoLink < link[0].length) // some more links to do
+                moveSomeLinks()
+            else{ // both nodes and links are done
+                if(restart){
+                    restart = false;
+                    todoNode = 0;
+                    todoLink = 0;
+                    requestAnimationFrame(moveSome);
+                }
+            }
+        }
+        //console.timeEnd('moveSome')
+    }
+        
+        
+    return function moveItems(){
+        if(!restart){
+            restart = true;
+            requestAnimationFrame(moveSome);
+        }
+    };
+ 
+  })();
+
+  // make all the links from the data
+  var link = svg.selectAll(".link")
+      .data(graph.links)
+    .enter().append("line")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return 0.5 * Math.sqrt(d.value); });
+
+  // add all the nodes from the data
+  var node = svg.selectAll(".node")
+      .data(graph.nodes)
+    .enter().append("g")
+    .attr("class", "node").attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+    .call(force.drag);
+
+    node.append("circle")
+      .attr("r", "3px")
+      .attr("stroke", "#ff0")
+      .attr("x", -8)
+      .attr("y", -8)
+      .attr("width", 16)
+      .attr("height", 16);
+
+  node.append("text")
+      .attr("dx", 10)
+      .attr("dy", ".35em")
+      .attr("font-size", "10")
+      .attr("fill", "black")
+      .text(function(d) { return d.name; });
+
+  force.on("tick", function() {
+    //console.log("Ticks");
+    //moveItems();
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    link.attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+
+    
+  });
+});
+
+</script>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<script src="../js/deps/d3.min.js"></script>
+<script>
+
+var a = 1;
+console.log(a);
+function dothis() {
+	console.log(a);
+	var a = 5;
+	console.log(a);
+}
+console.log(a);
+var a = 1;
+dothis();
+console.log(a);
+
+</script>
+
+<!--
+
+1
+1
+5
+undef
+1
+
+-->
