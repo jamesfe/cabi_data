@@ -9,7 +9,7 @@ elasticsearch==1.2.0
 itsdangerous==0.24
 numpy==1.9.0
 stevedore==0.15
-urllib3==1.9.1
+urllib3==1.26.5
 virtualenv==1.11.6
 virtualenv-clone==0.2.5
 virtualenvwrapper==4.3.1
